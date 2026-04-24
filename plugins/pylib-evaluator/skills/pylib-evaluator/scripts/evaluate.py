@@ -8,7 +8,7 @@ See SKILL.md in the parent directory for full methodology and interpretive
 patterns.
 
 Run:
-    uv run --with httpx python .claude/skills/pylib-evaluator/scripts/evaluate.py <package> [<package> ...]
+    uv run --with httpx python "${CLAUDE_PLUGIN_ROOT}/skills/pylib-evaluator/scripts/evaluate.py" <package> [<package> ...]
 """
 
 from __future__ import annotations
