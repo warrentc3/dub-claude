@@ -1,0 +1,8 @@
+{
+  "name": "dub-claude",
+  "description": "Claude Code plugin marketplace — tools and skills for agent-assisted development.",
+  "owner": {
+    "name": "Warren Carrigan"
+  },
+  "plugins": []
+}
