@@ -19,7 +19,6 @@ Captures a divergence event — a moment where the agent produced the wrong outp
 3. Present a one-paragraph summary to the operator: "Here's what I'm capturing — [bad output summary], correction: [correction summary], failure class: [class]. Correct?"
 4. Wait for confirmation or correction before writing
 5. Write the artifact file to `${CLAUDE_PLUGIN_DATA}/divergence_logs`
-6. Append a row to `${CLAUDE_PLUGIN_DATA}/divergence_logs/DIVERGENCE_INDEX.md`
 
 ## Failure Class Taxonomy
 
@@ -78,14 +77,6 @@ If the divergence involves multiple files (e.g., scope was overclaimed because t
 ```
 
 If context limits prevent embedding at capture time, note which files are required and embed them in a follow-up pass before the artifact is considered complete.
-```
-
-## Index Row
-
-Append to `${CLAUDE_PLUGIN_DATA}/divergence_logs/DIVERGENCE_INDEX.md`:
-
-```
-| YYYY-MM-DD | <project> | <failure-class> | <one-line summary> | [filename](filename) |
 ```
 
 ## Output
