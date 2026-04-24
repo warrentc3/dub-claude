@@ -1,0 +1,11 @@
+{
+  "name": "pylib-evaluator",
+  "version": "0.1.0",
+  "description": "Evaluate Python library maintenance state and adoption viability via PyPI metadata, GitHub repo activity, and commit decomposition.",
+  "author": {
+    "name": "warrentc3",
+    "url": "https://github.com/warrentc3"
+  },
+  "license": "MIT",
+  "keywords": ["python", "dependencies", "maintenance", "pypi", "evaluation"]
+}

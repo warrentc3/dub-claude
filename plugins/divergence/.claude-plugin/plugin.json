@@ -1,0 +1,11 @@
+{
+  "name": "divergence",
+  "version": "0.1.0",
+  "description": "Capture agent divergence events as structured preference pairs.",
+  "author": {
+    "name": "warrentc3",
+    "url": "https://github.com/warrentc3"
+  },
+  "license": "MIT",
+  "keywords": ["why-wont-you-listen-to-me", "agent-correction", "divergence"]
+}
