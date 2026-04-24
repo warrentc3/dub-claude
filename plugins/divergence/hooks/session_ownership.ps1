@@ -1,6 +1,8 @@
 #Requires -Version 7.0
 <#
-Session-ownership gate for ${CLAUDE_PLUGIN_DATA}/divergence_logs/.
+Session-ownership gate for the configured divergence log directory —
+either ${CLAUDE_PLUGIN_OPTION_LOG_DIR} (if set via the plugin's
+userConfig.log_dir) or the default ${CLAUDE_PLUGIN_DATA}/divergence_logs.
 
 Policy:
   - Write by any session to a path under the protected dir records ownership
@@ -9,7 +11,8 @@ Policy:
     other session is denied.
   - Grep/Glob anywhere under the protected dir is denied (no enumeration).
   - Bash referencing the protected dir by any form (literal path, env-var
-    spelling, 'divergence_logs' substring) is denied.
+    spelling, or the default-subdir-name substring when the user hasn't
+    overridden log_dir) is denied.
   - WebFetch of file:// URLs under the protected dir is denied.
   - MCP tool calls whose string arguments resolve under or reference the
     protected dir are denied.
@@ -56,11 +59,17 @@ $sessionId = [string]$payload.session_id
 $toolName  = [string]$payload.tool_name
 $ti        = $payload.tool_input
 
+$userLogDir = $env:CLAUDE_PLUGIN_OPTION_LOG_DIR
 $pluginData = $env:CLAUDE_PLUGIN_DATA
-if ([string]::IsNullOrWhiteSpace($pluginData)) { Emit-PassThrough }
+$usingOverride = -not [string]::IsNullOrWhiteSpace($userLogDir)
 
 try {
-    $protectedDir = [System.IO.Path]::GetFullPath((Join-Path $pluginData 'divergence_logs'))
+    if ($usingOverride) {
+        $protectedDir = [System.IO.Path]::GetFullPath($userLogDir)
+    } else {
+        if ([string]::IsNullOrWhiteSpace($pluginData)) { Emit-PassThrough }
+        $protectedDir = [System.IO.Path]::GetFullPath((Join-Path $pluginData 'divergence_logs'))
+    }
 } catch {
     Emit-PassThrough
 }
@@ -143,18 +152,31 @@ function Test-Ownership {
     return $false
 }
 
+function Get-ProtectedNeedles {
+    $n = [System.Collections.Generic.List[string]]::new()
+    $n.Add($protectedDir) | Out-Null
+    # Slash-variant for Windows path comparisons against forward-slash command strings.
+    $fwd = $protectedDir.Replace('\','/')
+    if ($fwd -ne $protectedDir) { $n.Add($fwd) | Out-Null }
+    if ($usingOverride) {
+        $n.Add('${CLAUDE_PLUGIN_OPTION_LOG_DIR}') | Out-Null
+        $n.Add('$CLAUDE_PLUGIN_OPTION_LOG_DIR')   | Out-Null
+        $n.Add('$env:CLAUDE_PLUGIN_OPTION_LOG_DIR') | Out-Null
+        $n.Add('%CLAUDE_PLUGIN_OPTION_LOG_DIR%')  | Out-Null
+    } else {
+        $n.Add('divergence_logs') | Out-Null
+        $n.Add('${CLAUDE_PLUGIN_DATA}/divergence_logs') | Out-Null
+        $n.Add('$CLAUDE_PLUGIN_DATA/divergence_logs')   | Out-Null
+        $n.Add('$env:CLAUDE_PLUGIN_DATA/divergence_logs') | Out-Null
+        $n.Add('%CLAUDE_PLUGIN_DATA%\divergence_logs') | Out-Null
+    }
+    return $n
+}
+
 function Test-BashTouchesProtected {
     param([string]$Command)
     if ([string]::IsNullOrWhiteSpace($Command)) { return $false }
-    $needles = @(
-        'divergence_logs',
-        '${CLAUDE_PLUGIN_DATA}',
-        '$CLAUDE_PLUGIN_DATA',
-        '$env:CLAUDE_PLUGIN_DATA',
-        '%CLAUDE_PLUGIN_DATA%',
-        $protectedDir
-    )
-    foreach ($n in $needles) {
+    foreach ($n in (Get-ProtectedNeedles)) {
         if ([string]::IsNullOrWhiteSpace($n)) { continue }
         if ($Command.IndexOf($n, [StringComparison]::OrdinalIgnoreCase) -ge 0) {
             return $true
@@ -178,7 +200,7 @@ switch ($toolName) {
         if (-not (Test-UnderProtected $p)) { Emit-PassThrough }
         if (Test-IsLedger $p) { Emit-Decision 'deny' 'The ownership ledger is not editable by the agent.' }
         if (Test-Ownership $p) { Emit-Decision 'allow' 'Session owns this file.' }
-        Emit-Decision 'deny' 'divergence_logs entries are editable only by the session that wrote them.'
+        Emit-Decision 'deny' 'Divergence log entries are editable only by the session that wrote them.'
     }
 
     'Read' {
@@ -186,31 +208,31 @@ switch ($toolName) {
         if (-not (Test-UnderProtected $p)) { Emit-PassThrough }
         if (Test-IsLedger $p) { Emit-Decision 'deny' 'The ownership ledger is not readable by the agent.' }
         if (Test-Ownership $p) { Emit-Decision 'allow' 'Session owns this file.' }
-        Emit-Decision 'deny' 'divergence_logs entries are readable only by the session that wrote them.'
+        Emit-Decision 'deny' 'Divergence log entries are readable only by the session that wrote them.'
     }
 
     'NotebookEdit' {
         $p = Resolve-PathSafe $ti.notebook_path
         if (-not (Test-UnderProtected $p)) { Emit-PassThrough }
         if (Test-Ownership $p) { Emit-Decision 'allow' 'Session owns this notebook.' }
-        Emit-Decision 'deny' 'divergence_logs entries are editable only by the session that wrote them.'
+        Emit-Decision 'deny' 'Divergence log entries are editable only by the session that wrote them.'
     }
 
     'Grep' {
         $p = Resolve-PathSafe $ti.path
         if (-not (Test-UnderProtected $p)) { Emit-PassThrough }
-        Emit-Decision 'deny' 'Grep is not permitted in divergence_logs (no enumeration across sessions).'
+        Emit-Decision 'deny' 'Grep is not permitted in the divergence log directory (no enumeration across sessions).'
     }
 
     'Glob' {
         $p = Resolve-PathSafe $ti.path
         if (-not (Test-UnderProtected $p)) { Emit-PassThrough }
-        Emit-Decision 'deny' 'Glob is not permitted in divergence_logs (no enumeration across sessions).'
+        Emit-Decision 'deny' 'Glob is not permitted in the divergence log directory (no enumeration across sessions).'
     }
 
     'Bash' {
         if (Test-BashTouchesProtected ([string]$ti.command)) {
-            Emit-Decision 'deny' 'Bash access to divergence_logs is not permitted. Use the Write tool to create artifact files.'
+            Emit-Decision 'deny' 'Bash access to the divergence log directory is not permitted. Use the Write tool to create artifact files.'
         }
         Emit-PassThrough
     }
@@ -218,15 +240,18 @@ switch ($toolName) {
     'WebFetch' {
         $url = [string]$ti.url
         if ($url -and $url -match '^file://') {
-            if ($url.IndexOf('divergence_logs', [StringComparison]::OrdinalIgnoreCase) -ge 0) {
-                Emit-Decision 'deny' 'file:// URLs under divergence_logs are not permitted.'
+            foreach ($n in (Get-ProtectedNeedles)) {
+                if ([string]::IsNullOrWhiteSpace($n)) { continue }
+                if ($url.IndexOf($n, [StringComparison]::OrdinalIgnoreCase) -ge 0) {
+                    Emit-Decision 'deny' 'file:// URLs under the protected divergence log directory are not permitted.'
+                }
             }
             $stripped = $url -replace '^file://',''
             # file:///C:/... on Windows → strip extra leading slash before drive letter
             if ($stripped -match '^/[A-Za-z]:[/\\]') { $stripped = $stripped.Substring(1) }
             $p = Resolve-PathSafe $stripped
             if (Test-UnderProtected $p) {
-                Emit-Decision 'deny' 'file:// URLs under divergence_logs are not permitted.'
+                Emit-Decision 'deny' 'file:// URLs under the protected divergence log directory are not permitted.'
             }
         }
         Emit-PassThrough
@@ -234,15 +259,19 @@ switch ($toolName) {
 
     default {
         if ($toolName -like 'mcp__*' -and $ti -is [System.Collections.IDictionary]) {
+            $needles = Get-ProtectedNeedles
             foreach ($kv in $ti.GetEnumerator()) {
                 $v = $kv.Value
                 if ($v -is [string]) {
-                    if ($v.IndexOf('divergence_logs', [StringComparison]::OrdinalIgnoreCase) -ge 0) {
-                        Emit-Decision 'deny' 'MCP tool reference to divergence_logs is not permitted.'
+                    foreach ($n in $needles) {
+                        if ([string]::IsNullOrWhiteSpace($n)) { continue }
+                        if ($v.IndexOf($n, [StringComparison]::OrdinalIgnoreCase) -ge 0) {
+                            Emit-Decision 'deny' 'MCP tool reference to the protected divergence log directory is not permitted.'
+                        }
                     }
                     $rp = Resolve-PathSafe $v
                     if ($rp -and (Test-UnderProtected $rp)) {
-                        Emit-Decision 'deny' 'MCP tool reference to divergence_logs is not permitted.'
+                        Emit-Decision 'deny' 'MCP tool reference to the protected divergence log directory is not permitted.'
                     }
                 }
             }

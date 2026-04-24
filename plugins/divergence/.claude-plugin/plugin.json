@@ -1,11 +1,18 @@
 {
   "name": "divergence",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Capture agent divergence events as structured preference pairs.",
   "author": {
     "name": "warrentc3",
     "url": "https://github.com/warrentc3"
   },
   "license": "MIT",
-  "keywords": ["why-wont-you-listen-to-me", "agent-correction", "divergence"]
+  "keywords": ["why-wont-you-listen-to-me", "agent-correction", "divergence"],
+  "userConfig": {
+    "log_dir": {
+      "type": "directory",
+      "title": "Divergence log directory",
+      "description": "Where divergence artifact files are written and gated by the session-ownership hook. Leave blank to use the plugin's default data directory."
+    }
+  }
 }

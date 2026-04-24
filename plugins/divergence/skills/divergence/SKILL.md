@@ -18,7 +18,7 @@ Captures a divergence event — a moment where the agent produced the wrong outp
    - The failure class (from the taxonomy below)
 3. Present a one-paragraph summary to the operator: "Here's what I'm capturing — [bad output summary], correction: [correction summary], failure class: [class]. Correct?"
 4. Wait for confirmation or correction before writing
-5. Write the artifact file to `${CLAUDE_PLUGIN_DATA}/divergence_logs`
+5. Write the artifact file to the divergence log directory (see **Artifact File Format** below for the resolved path)
 
 ## Failure Class Taxonomy
 
@@ -36,7 +36,8 @@ Captures a divergence event — a moment where the agent produced the wrong outp
 ## Artifact File Format
 
 **Filename**: `YYYY-MM-DD-HHmm_<failure-class>_<slug>.md`
-**Location**: `${CLAUDE_PLUGIN_DATA}/divergence_logs`
+
+**Location**: `${user_config.log_dir}` when the operator configured `userConfig.log_dir` at plugin-enable time. Otherwise fall back to `${CLAUDE_PLUGIN_DATA}/divergence_logs`. The session-ownership hook treats whichever of these is in effect as the protected directory.
 
 ```markdown
 ---

@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-# Session-ownership gate for ${CLAUDE_PLUGIN_DATA}/divergence_logs/.
+# Session-ownership gate for the configured divergence log directory —
+# either $CLAUDE_PLUGIN_OPTION_LOG_DIR (if set via the plugin's
+# userConfig.log_dir) or the default $CLAUDE_PLUGIN_DATA/divergence_logs.
+#
 # Unix peer of session_ownership.ps1 (Windows). Self-guards on platform so
 # registering both in hooks.json is safe: one runs, the other no-ops.
 #
@@ -29,12 +32,19 @@ session_id=$(printf '%s' "$payload" | jq -r '.session_id // empty')
 tool_name=$(printf '%s' "$payload" | jq -r '.tool_name // empty')
 tool_input=$(printf '%s' "$payload" | jq -c '.tool_input // {}')
 
-[ -z "${CLAUDE_PLUGIN_DATA:-}" ] && exit 0
+if [ -n "${CLAUDE_PLUGIN_OPTION_LOG_DIR:-}" ]; then
+  using_override=1
+  raw_dir="$CLAUDE_PLUGIN_OPTION_LOG_DIR"
+else
+  using_override=0
+  [ -z "${CLAUDE_PLUGIN_DATA:-}" ] && exit 0
+  raw_dir="$CLAUDE_PLUGIN_DATA/divergence_logs"
+fi
 
 if command -v realpath >/dev/null 2>&1; then
-  protected_dir="$(realpath -m "$CLAUDE_PLUGIN_DATA/divergence_logs")"
+  protected_dir="$(realpath -m "$raw_dir")"
 else
-  protected_dir="$CLAUDE_PLUGIN_DATA/divergence_logs"
+  protected_dir="$raw_dir"
 fi
 ledger_path="$protected_dir/.ownership.jsonl"
 
@@ -105,37 +115,43 @@ case "$tool_name" in
     is_under_protected "$p" || exit 0
     is_ledger "$p" && emit_decision deny "The ownership ledger is not editable by the agent."
     check_ownership "$p" && emit_decision allow "Session owns this file."
-    emit_decision deny "divergence_logs entries are editable only by the session that wrote them."
+    emit_decision deny "Divergence log entries are editable only by the session that wrote them."
     ;;
   Read)
     p=$(resolve_path "$(ti_get '.file_path')")
     is_under_protected "$p" || exit 0
     is_ledger "$p" && emit_decision deny "The ownership ledger is not readable by the agent."
     check_ownership "$p" && emit_decision allow "Session owns this file."
-    emit_decision deny "divergence_logs entries are readable only by the session that wrote them."
+    emit_decision deny "Divergence log entries are readable only by the session that wrote them."
     ;;
   NotebookEdit)
     p=$(resolve_path "$(ti_get '.notebook_path')")
     is_under_protected "$p" || exit 0
     check_ownership "$p" && emit_decision allow "Session owns this notebook."
-    emit_decision deny "divergence_logs entries are editable only by the session that wrote them."
+    emit_decision deny "Divergence log entries are editable only by the session that wrote them."
     ;;
   Grep)
     p=$(resolve_path "$(ti_get '.path')")
     is_under_protected "$p" || exit 0
-    emit_decision deny "Grep is not permitted in divergence_logs (no enumeration across sessions)."
+    emit_decision deny "Grep is not permitted in the divergence log directory (no enumeration across sessions)."
     ;;
   Glob)
     p=$(resolve_path "$(ti_get '.path')")
     is_under_protected "$p" || exit 0
-    emit_decision deny "Glob is not permitted in divergence_logs (no enumeration across sessions)."
+    emit_decision deny "Glob is not permitted in the divergence log directory (no enumeration across sessions)."
     ;;
   Bash)
     cmd=$(ti_get '.command')
-    for needle in 'divergence_logs' '${CLAUDE_PLUGIN_DATA}' '$CLAUDE_PLUGIN_DATA' '%CLAUDE_PLUGIN_DATA%' "$protected_dir"; do
+    needles=("$protected_dir")
+    if [ "$using_override" = "1" ]; then
+      needles+=('${CLAUDE_PLUGIN_OPTION_LOG_DIR}' '$CLAUDE_PLUGIN_OPTION_LOG_DIR' '%CLAUDE_PLUGIN_OPTION_LOG_DIR%')
+    else
+      needles+=('divergence_logs' '${CLAUDE_PLUGIN_DATA}/divergence_logs' '$CLAUDE_PLUGIN_DATA/divergence_logs' '%CLAUDE_PLUGIN_DATA%\divergence_logs')
+    fi
+    for needle in "${needles[@]}"; do
       [ -z "$needle" ] && continue
       case "$cmd" in
-        *"$needle"*) emit_decision deny "Bash access to divergence_logs is not permitted. Use the Write tool to create artifact files." ;;
+        *"$needle"*) emit_decision deny "Bash access to the divergence log directory is not permitted. Use the Write tool to create artifact files." ;;
       esac
     done
     exit 0
@@ -144,24 +160,45 @@ case "$tool_name" in
     url=$(ti_get '.url')
     case "$url" in
       file://*)
-        case "$url" in
-          *divergence_logs*) emit_decision deny "file:// URLs under divergence_logs are not permitted." ;;
-        esac
+        needles=("$protected_dir")
+        if [ "$using_override" = "1" ]; then
+          needles+=('${CLAUDE_PLUGIN_OPTION_LOG_DIR}' '$CLAUDE_PLUGIN_OPTION_LOG_DIR' '%CLAUDE_PLUGIN_OPTION_LOG_DIR%')
+        else
+          needles+=('divergence_logs')
+        fi
+        for needle in "${needles[@]}"; do
+          [ -z "$needle" ] && continue
+          case "$url" in
+            *"$needle"*) emit_decision deny "file:// URLs under the protected divergence log directory are not permitted." ;;
+          esac
+        done
         stripped="${url#file://}"
         # Handle file:///C:/... (Windows-style) by trimming leading / before a drive letter.
         case "$stripped" in
           /[A-Za-z]:[/\\]*) stripped="${stripped#/}" ;;
         esac
         p=$(resolve_path "$stripped")
-        is_under_protected "$p" && emit_decision deny "file:// URLs under divergence_logs are not permitted."
+        is_under_protected "$p" && emit_decision deny "file:// URLs under the protected divergence log directory are not permitted."
         ;;
     esac
     exit 0
     ;;
   mcp__*)
-    if printf '%s' "$tool_input" | jq -e '[.. | strings] | any(. | test("divergence_logs"; "i"))' >/dev/null 2>&1; then
-      emit_decision deny "MCP tool reference to divergence_logs is not permitted."
+    if [ "$using_override" = "1" ]; then
+      pattern="CLAUDE_PLUGIN_OPTION_LOG_DIR"
+    else
+      pattern="divergence_logs"
     fi
+    if printf '%s' "$tool_input" | jq -e --arg pat "$pattern" \
+         '[.. | strings] | any(. | test($pat; "i"))' >/dev/null 2>&1; then
+      emit_decision deny "MCP tool reference to the protected divergence log directory is not permitted."
+    fi
+    # Additionally: any string arg that resolves under the protected dir.
+    while IFS= read -r s; do
+      [ -z "$s" ] && continue
+      rp=$(resolve_path "$s")
+      is_under_protected "$rp" && emit_decision deny "MCP tool reference to the protected divergence log directory is not permitted."
+    done < <(printf '%s' "$tool_input" | jq -r '[.. | strings] | .[]')
     exit 0
     ;;
   *)
