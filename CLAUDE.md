@@ -31,5 +31,5 @@ DubClaude plugins may reference MCP servers that live in their own repos, not in
 
 ## Situational awareness
 
-- [ARCHITECTURE.md](../_situational_awareness/DubClaude/ARCHITECTURE.md) — timeless design.
-- [POSTERITY.md](../_situational_awareness/DubClaude/POSTERITY.md) — decisions, deferred items, priorities.
+- [ARCHITECTURE.md](../_situational_awareness/dub-claude/ARCHITECTURE.md) — timeless design.
+- [POSTERITY.md](../_situational_awareness/dub-claude/POSTERITY.md) — decisions, deferred items, priorities.
