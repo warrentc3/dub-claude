@@ -2,6 +2,7 @@
 name: divergence
 description: Use when the operator corrects an agent output — to capture the wrong output, the correction, and the right output as a structured preference pair
 user-invocable: true
+disable-model-invocation: true
 ---
 
 # Divergence Capture

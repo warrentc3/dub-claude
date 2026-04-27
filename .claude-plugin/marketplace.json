@@ -28,6 +28,17 @@
       "category": "developer-tools",
       "homepage": "https://github.com/warrentc3",
       "repository": "https://github.com/warrentc3/dub-claude"
+    },
+    {
+      "name": "session-retro",
+      "source": "./plugins/session-retro",
+      "description": "Write a structured session retrospective from a Claude Code transcript — 4-section format with session metrics header.",
+      "author": { "name": "warrentc3" },
+      "license": "MIT",
+      "keywords": ["retrospective", "session", "reflection"],
+      "category": "agent-development",
+      "homepage": "https://github.com/warrentc3",
+      "repository": "https://github.com/warrentc3/dub-claude"
     }
   ]
 }

@@ -2,6 +2,7 @@
 name: pylib-evaluator
 description: Evaluate a Python library's maintenance state and adoption viability via PyPI metadata, GitHub repo activity, and commit decomposition (bot-vs-human author classification). Produces a viability report for dependency-adoption decisions.
 user-invocable: true
+disable-model-invocation: true
 ---
 
 # Python Library Evaluator

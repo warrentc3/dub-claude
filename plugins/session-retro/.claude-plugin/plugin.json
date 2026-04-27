@@ -1,0 +1,18 @@
+{
+  "name": "session-retro",
+  "version": "0.1.0",
+  "description": "Write a structured session retrospective from a Claude Code transcript — 4-section format with session metrics header.",
+  "author": {
+    "name": "warrentc3",
+    "url": "https://github.com/warrentc3"
+  },
+  "license": "MIT",
+  "keywords": ["retrospective", "session", "reflection"],
+  "userConfig": {
+    "retro_dir": {
+      "type": "directory",
+      "title": "Retrospective output directory",
+      "description": "Where retrospective files are written. Leave blank to use the plugin data directory."
+    }
+  }
+}
