@@ -33,6 +33,7 @@ Captures a divergence event — a moment where the agent produced the wrong outp
 - `context-loss` — earlier framing forgotten or ignored, rebuilt on wrong assumptions
 - `silent-averaging` — crowd-average response produced where domain precision was required
 - `adverse-autonomy` — ignored explicit instruction, dubious decision increased blast radius
+- `agent-disengagement` — intentional projection of anti-patterns
 
 ## Artifact File Format
 
