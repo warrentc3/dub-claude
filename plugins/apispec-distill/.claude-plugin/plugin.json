@@ -1,0 +1,11 @@
+{
+  "name": "apispec-distill",
+  "version": "0.0.1",
+  "description": "Distill a publishable OpenAPI specification for a third-party API from whatever input shape is available — vendor docs, reference OSS implementations, captured response samples, or a flimsy upstream spec. Produces a netizen-quality artifact: empirically validated, gap-annotated, suitable for public release.",
+  "author": {
+    "name": "warrentc3",
+    "url": "https://github.com/warrentc3"
+  },
+  "license": "MIT",
+  "keywords": ["openapi", "api", "spec", "documentation", "empirical", "validation"]
+}
