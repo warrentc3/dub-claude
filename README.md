@@ -2,6 +2,8 @@
 
 A Claude Code plugin marketplace. Tools and skills for agent-assisted development, each independently installable and independently versioned.
 
+The patterns these plugins implement are articulated at [warrentc3/LLM-identity](https://github.com/warrentc3/LLM-identity) — read the doctrine to understand *why* the plugins are shaped the way they are.
+
 ## Install the marketplace
 
 ```

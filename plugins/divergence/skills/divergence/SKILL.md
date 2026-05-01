@@ -2,7 +2,7 @@
 name: divergence
 description: Use when the operator corrects an agent output — to capture the wrong output, the correction, and the right output as a structured preference pair
 user-invocable: true
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # Divergence Capture
@@ -41,7 +41,7 @@ Captures a divergence event — a moment where the agent produced the wrong outp
 
 **Location**: `${user_config.log_dir}` when the operator configured `userConfig.log_dir` at plugin-enable time. Otherwise fall back to `${CLAUDE_PLUGIN_DATA}/divergence_logs`. The session-ownership hook treats whichever of these is in effect as the protected directory.
 
-```markdown
+````markdown
 ---
 date: YYYY-MM-DDTHH:MM
 failure_class: <taxonomy value>
@@ -80,7 +80,7 @@ If the divergence involves multiple files (e.g., scope was overclaimed because t
 ```
 
 If context limits prevent embedding at capture time, note which files are required and embed them in a follow-up pass before the artifact is considered complete.
-```
+````
 
 ## Output
 
