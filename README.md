@@ -23,6 +23,7 @@ Skills resolve as `<plugin-name>:<skill-name>` once installed.
 | Plugin                                                 | Purpose                                                                                                        |
 | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
 | [divergence](plugins/divergence/README.md)             | Capture agent correction events as structured preference-pair artifacts. Session-owned: write-once, owner-read-only. |
+| [recognition](plugins/recognition/README.md)           | Capture agent recognition events — operator acknowledgement of agent-act or surfaced insight — as structured artifacts. Equal-and-opposite to divergence. |
 | [pylib-evaluator](plugins/pylib-evaluator/README.md)   | Evaluate Python libraries against PyPI metadata, GitHub repo state, and commit decomposition. Produces a maintenance-state report for dependency-adoption decisions. |
 | [session-retro](plugins/session-retro/README.md)       | Write a structured session retrospective — 4-section format with session metrics header extracted from the transcript. |
 
@@ -36,6 +37,7 @@ dub-claude/
 │   └── marketplace.json          # marketplace manifest; declares every plugin
 ├── plugins/
 │   ├── divergence/               # see plugins/divergence/README.md
+│   ├── recognition/              # see plugins/recognition/README.md
 │   ├── pylib-evaluator/          # see plugins/pylib-evaluator/README.md
 │   └── session-retro/            # see plugins/session-retro/README.md
 ├── LICENSE                       # MIT

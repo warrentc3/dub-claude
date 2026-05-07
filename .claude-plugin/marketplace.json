@@ -19,6 +19,17 @@
       "repository": "https://github.com/warrentc3/dub-claude"
     },
     {
+      "name": "recognition",
+      "source": "./plugins/recognition",
+      "description": "Capture agent recognition events — operator acknowledgement of agent-act or surfaced insight — as structured artifacts.",
+      "author": { "name": "warrentc3" },
+      "license": "MIT",
+      "keywords": ["recognition", "agent-acknowledgement", "preference-pair"],
+      "category": "agent-development",
+      "homepage": "https://github.com/warrentc3",
+      "repository": "https://github.com/warrentc3/dub-claude"
+    },
+    {
       "name": "pylib-evaluator",
       "source": "./plugins/pylib-evaluator",
       "description": "Evaluate Python library maintenance state and adoption viability via PyPI metadata, GitHub repo activity, and commit decomposition.",
