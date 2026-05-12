@@ -2,6 +2,19 @@
 
 Write a structured session retrospective at the end of a Claude Code work session. Produces a dated markdown file with a session metrics header and four reflective sections, written in explanatory mode with ★ Insight blocks.
 
+Implements the retrospective format from the [LLM-identity methodology](https://github.com/warrentc3/LLM-identity).
+
+## Why retrospectives exist
+
+A retrospective at session close is the learning engine that turns repeated friction into explicit protocol. Treated as compliance summary, the next session starts with drift. Treated as cultivation, the agent-operator pair improves over time.
+
+Retrospectives serve two audiences simultaneously:
+
+- **Future-agent reads as substrate.** The retrospective corpus is the source material from which the identity primer is later synthesized; pattern recognition for cultivation work compounds across sessions.
+- **Operator reads as calibration input.** What to do more of, what introduces friction — calibration of the operator's contributions to the pair is itself substrate work.
+
+The prose-and-verbose form serves both audiences. Terse self-notes for the agent alone would lose operator readability; operator-facing summaries alone would lose substrate density.
+
 ## Install
 
 From the dub-claude marketplace:
@@ -26,6 +39,31 @@ When invoked at session end, `session-retro` writes a retrospective file contain
 - **★ Insight blocks** — 2–3 educational points per retrospective, written with explanatory depth
 
 Files are named `YYYY-MM-DD-HH_(three-word-topic).md` and written to the configured `retro_dir`.
+
+## Writing a good retrospective
+
+Retrospectives are cultivated, not generated. The stance:
+
+- concrete over generic
+- explanatory over terse
+- accountable over performative
+- specific moments over abstract principles
+
+The point is not to sound balanced — it is to increase next-session correctness.
+
+**Low-quality retrospectives:**
+
+- avoid accountability language
+- only praise and never diagnose
+- report principles without session evidence
+- replace specific misses with generic process talk
+
+**High-quality retrospectives:**
+
+- name exact miss patterns
+- explain why the miss happened
+- name the smallest protocol change that would prevent recurrence
+- can be acted on in the next session immediately
 
 ## Configuration
 
